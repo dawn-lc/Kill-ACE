@@ -1,179 +1,195 @@
-# ¼ì²éÊÇ·ñÒÔ¹ÜÀíÔ±Éí·İÔËĞĞ
+ï»¿# æ£€æŸ¥æ˜¯å¦ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
-    Write-Host "´íÎó£ºÇëÒÔ¹ÜÀíÔ±Éí·İÔËĞĞ´Ë½Å±¾£¡" -ForegroundColor Red
-    Write-Host "`n°´ Enter ¼üÍË³ö" -ForegroundColor Red
+    Write-Host "é”™è¯¯ï¼šè¯·ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œæ­¤è„šæœ¬ï¼" -ForegroundColor Red
+    Write-Host "`næŒ‰ Enter é”®é€€å‡º" -ForegroundColor Red
     Read-Host
     exit
 }
 
-# »ñÈ¡µ±Ç°½Å±¾µÄÄ¿Â¼
+# è·å–å½“å‰è„šæœ¬çš„ç›®å½•
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-# Ä¿±ê½ø³ÌÃû³Æ£¨°×Ãûµ¥½ø³Ì²»ÖÕÖ¹£©
-$processNames = @("SGuardSvc64", "SGuard64", "ACE-Tray", "browser", "delta_force_launcher")#, "AclosGameProxy", "CrossProxy", "ÎŞÎ·ÆõÔ¼µÇÂ¼Æ÷", "chrome"
-$whitelist = @("delta_force_launcher", "browser", "AclosGameProxy", "CrossProxy", "ÎŞÎ·ÆõÔ¼µÇÂ¼Æ÷")  # °×Ãûµ¥½ø³Ì£¬½öÏŞÖÆ²»ÖÕÖ¹
+# ç›®æ ‡è¿›ç¨‹åç§°ï¼ˆç™½åå•è¿›ç¨‹ä¸ç»ˆæ­¢ï¼‰
+$processNames = @("SGuardSvc64", "SGuard64", "ACE-Tray", "browser", "delta_force_launcher")#, "AclosGameProxy", "CrossProxy", "æ— ç•å¥‘çº¦ç™»å½•å™¨", "chrome"
+$whitelist = @("delta_force_launcher", "browser", "AclosGameProxy", "CrossProxy", "æ— ç•å¥‘çº¦ç™»å½•å™¨")  # ç™½åå•è¿›ç¨‹ï¼Œä»…é™åˆ¶ä¸ç»ˆæ­¢
 
-# Ä¿±ê·şÎñÃû³Æ£¨Ê¹ÓÃ DisplayName£¬ĞèÈ·ÈÏ£©
+# ç›®æ ‡æœåŠ¡åç§°ï¼ˆä½¿ç”¨ DisplayNameï¼Œéœ€ç¡®è®¤ï¼‰
 $serviceNames = @("AntiCheatExpert Service", "AntiCheatExpert Protection")
 
-# ¼ì²é wmic ¿ÉÓÃĞÔ
+# æ£€æŸ¥ wmic å¯ç”¨æ€§
 $wmicAvailable = $true
 try {
     & wmic /? | Out-Null
-} catch {
+}
+catch {
     $wmicAvailable = $false
-    Write-Host "¾¯¸æ£ºwmic ²»¿ÉÓÃ£¬I/O ÓÅÏÈ¼¶ÉèÖÃºÍ²¿·ÖÖÕÖ¹·½·¨¿ÉÄÜÊÜÏŞ¡£`n½¨ÒéÉı¼¶µ½ PowerShell 7 »òÊ¹ÓÃµÚÈı·½¹¤¾ß£¨Èç Process Lasso£©¡£" -ForegroundColor Yellow
+    Write-Host "è­¦å‘Šï¼šwmic ä¸å¯ç”¨ï¼ŒI/O ä¼˜å…ˆçº§è®¾ç½®å’Œéƒ¨åˆ†ç»ˆæ­¢æ–¹æ³•å¯èƒ½å—é™ã€‚`nå»ºè®®å‡çº§åˆ° PowerShell 7 æˆ–ä½¿ç”¨ç¬¬ä¸‰æ–¹å·¥å…·ï¼ˆå¦‚ Process Lassoï¼‰ã€‚" -ForegroundColor Yellow
 }
 
-Write-Host "`n=== ¿ªÊ¼´¦Àí·şÎñ ===" -ForegroundColor Cyan
-# Í£Ö¹Ïà¹Ø·şÎñ
+Write-Host "`n=== å¼€å§‹å¤„ç†æœåŠ¡ ===" -ForegroundColor Cyan
+# åœæ­¢ç›¸å…³æœåŠ¡
 foreach ($service in $serviceNames) {
-    Write-Host "`n¼ì²é·şÎñ: $service" -ForegroundColor White
+    Write-Host "`næ£€æŸ¥æœåŠ¡: $service" -ForegroundColor White
     $svc = Get-Service -DisplayName $service -ErrorAction SilentlyContinue
     if ($svc) {
         if ($svc.Status -eq "Running") {
             try {
                 Stop-Service -Name $svc.Name -Force -ErrorAction Stop
-                Write-Host "ÒÑÍ£Ö¹·şÎñ: $service" -ForegroundColor Green
-            } catch {
-                Write-Host "ÎŞ·¨Í£Ö¹·şÎñ ${service}: $($_.Exception.Message)`nÇë¼ì²é·şÎñÈ¨ÏŞ»ò×´Ì¬¡£" -ForegroundColor Yellow
+                Write-Host "å·²åœæ­¢æœåŠ¡: $service" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "æ— æ³•åœæ­¢æœåŠ¡ ${service}: $($_.Exception.Message)`nè¯·æ£€æŸ¥æœåŠ¡æƒé™æˆ–çŠ¶æ€ã€‚" -ForegroundColor Yellow
             }
         }
         try {
             Set-Service -Name $svc.Name -StartupType Manual -ErrorAction Stop
-            Write-Host "ÒÑ½«·şÎñ ${service} µÄÆô¶¯ÀàĞÍÉèÖÃÎªÊÖ¶¯" -ForegroundColor Green
-        } catch {
-            Write-Host "ÎŞ·¨ÉèÖÃ·şÎñ ${service} µÄÆô¶¯ÀàĞÍ: $($_.Exception.Message)`nÇë¼ì²é·şÎñÅäÖÃ¡£" -ForegroundColor Yellow
+            Write-Host "å·²å°†æœåŠ¡ ${service} çš„å¯åŠ¨ç±»å‹è®¾ç½®ä¸ºæ‰‹åŠ¨" -ForegroundColor Green
         }
-    } else {
-        Write-Host "Î´ÕÒµ½·şÎñ: $service`nÇëÔÚ services.msc ÖĞÈ·ÈÏ·şÎñ DisplayName¡£" -ForegroundColor Yellow
+        catch {
+            Write-Host "æ— æ³•è®¾ç½®æœåŠ¡ ${service} çš„å¯åŠ¨ç±»å‹: $($_.Exception.Message)`nè¯·æ£€æŸ¥æœåŠ¡é…ç½®ã€‚" -ForegroundColor Yellow
+        }
+    }
+    else {
+        Write-Host "æœªæ‰¾åˆ°æœåŠ¡: $service`nè¯·åœ¨ services.msc ä¸­ç¡®è®¤æœåŠ¡ DisplayNameã€‚" -ForegroundColor Yellow
     }
 }
 
-Write-Host "`n=== ¿ªÊ¼´¦Àí½ø³Ì ===" -ForegroundColor Cyan
-# »ñÈ¡ CPU ºËÊıÁ¿
+Write-Host "`n=== å¼€å§‹å¤„ç†è¿›ç¨‹ ===" -ForegroundColor Cyan
+# è·å– CPU æ ¸æ•°é‡
 $cpuCount = [Environment]::ProcessorCount
-# ¼ÆËã×îºóÒ»¸ö CPU ºËµÄÇ×ºÍĞÔÑÚÂë
+# è®¡ç®—æœ€åä¸€ä¸ª CPU æ ¸çš„äº²å’Œæ€§æ©ç 
 $lastCpuMask = [IntPtr] (1 -shl ($cpuCount - 1))
-Write-Host "CPU ºËÊıÁ¿: $cpuCount, ×îºóÒ»¸ö CPU ºË: $($cpuCount - 1), ÑÚÂë: $lastCpuMask" -ForegroundColor White
+Write-Host "CPU æ ¸æ•°é‡: $cpuCount, æœ€åä¸€ä¸ª CPU æ ¸: $($cpuCount - 1), æ©ç : $lastCpuMask" -ForegroundColor White
 
-# ´¦ÀíÄ¿±ê½ø³Ì
+# å¤„ç†ç›®æ ‡è¿›ç¨‹
 foreach ($name in $processNames) {
-    # ²éÕÒÄ¿±ê½ø³Ì
+    # æŸ¥æ‰¾ç›®æ ‡è¿›ç¨‹
     $processes = Get-Process -Name $name -ErrorAction SilentlyContinue
 
     if ($processes) {
         foreach ($process in $processes) {
-            Write-Host "`nÕÒµ½½ø³Ì: $($process.Name), PID: $($process.Id)" -ForegroundColor White
+            Write-Host "`næ‰¾åˆ°è¿›ç¨‹: $($process.Name), PID: $($process.Id)" -ForegroundColor White
 
-            # ÉèÖÃ CPU Ç×ºÍĞÔÎª×îºóÒ»¸ö CPU ºË
+            # è®¾ç½® CPU äº²å’Œæ€§ä¸ºæœ€åä¸€ä¸ª CPU æ ¸
             try {
                 $process.ProcessorAffinity = $lastCpuMask
-                Write-Host "ÒÑ½« $($process.Name) µÄ CPU Ç×ºÍĞÔÉèÖÃÎª CPU $($cpuCount - 1)" -ForegroundColor Green
-            } catch {
-                Write-Host "ÎŞ·¨ÉèÖÃ $($process.Name) µÄ CPU Ç×ºÍĞÔ: $($_.Exception.Message)`n¿ÉÄÜĞèÒª¸ü¸ßÈ¨ÏŞ£¨Èç SYSTEM£©¡£" -ForegroundColor Yellow
+                Write-Host "å·²å°† $($process.Name) çš„ CPU äº²å’Œæ€§è®¾ç½®ä¸º CPU $($cpuCount - 1)" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "æ— æ³•è®¾ç½® $($process.Name) çš„ CPU äº²å’Œæ€§: $($_.Exception.Message)`nå¯èƒ½éœ€è¦æ›´é«˜æƒé™ï¼ˆå¦‚ SYSTEMï¼‰ã€‚" -ForegroundColor Yellow
             }
 
-            # ÉèÖÃ½ø³ÌÓÅÏÈ¼¶ÎªµÍ (Idle)
+            # è®¾ç½®è¿›ç¨‹ä¼˜å…ˆçº§ä¸ºä½ (Idle)
             try {
                 $process.PriorityClass = "Idle"
-                Write-Host "ÒÑ½« $($process.Name) µÄÓÅÏÈ¼¶ÉèÖÃÎªµÍ (Idle)" -ForegroundColor Green
-            } catch {
-                Write-Host "ÎŞ·¨ÉèÖÃ $($process.Name) µÄÓÅÏÈ¼¶: $($_.Exception.Message)`n¿ÉÄÜĞèÒª¸ü¸ßÈ¨ÏŞ¡£" -ForegroundColor Yellow
+                Write-Host "å·²å°† $($process.Name) çš„ä¼˜å…ˆçº§è®¾ç½®ä¸ºä½ (Idle)" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "æ— æ³•è®¾ç½® $($process.Name) çš„ä¼˜å…ˆçº§: $($_.Exception.Message)`nå¯èƒ½éœ€è¦æ›´é«˜æƒé™ã€‚" -ForegroundColor Yellow
             }
 
-            # ÉèÖÃ I/O ÓÅÏÈ¼¶Îª·Ç³£µÍ (Very Low)
+            # è®¾ç½® I/O ä¼˜å…ˆçº§ä¸ºéå¸¸ä½ (Very Low)
             try {
                 if ($PSVersionTable.PSVersion.Major -ge 7) {
-                    # PowerShell 7+ ºÍ Windows 10 1809+ Ö§³Ö Set-ProcessIoPriority
+                    # PowerShell 7+ å’Œ Windows 10 1809+ æ”¯æŒ Set-ProcessIoPriority
                     Set-ProcessIoPriority -Id $process.Id -Priority VeryLow -ErrorAction Stop
-                    Write-Host "ÒÑ½« $($process.Name) µÄ I/O ÓÅÏÈ¼¶ÉèÖÃÎª·Ç³£µÍ (Very Low)" -ForegroundColor Green
-                } elseif ($wmicAvailable) {
-                    # »ØÍËµ½ wmic
-                    & wmic process where processid=$($process.Id) call setpriority 1
-                    Write-Host "ÒÑ½« $($process.Name) µÄ I/O ÓÅÏÈ¼¶ÉèÖÃÎª·Ç³£µÍ (Very Low, via wmic)" -ForegroundColor Green
-                } else {
-                    Write-Host "ÎŞ·¨ÉèÖÃ $($process.Name) µÄ I/O ÓÅÏÈ¼¶£ºÏµÍ³²»Ö§³Ö wmic ÇÒ PowerShell °æ±¾¹ıµÍ`n½¨ÒéÉı¼¶ PowerShell »òÊ¹ÓÃ Process Lasso¡£" -ForegroundColor Yellow
+                    Write-Host "å·²å°† $($process.Name) çš„ I/O ä¼˜å…ˆçº§è®¾ç½®ä¸ºéå¸¸ä½ (Very Low)" -ForegroundColor Green
                 }
-            } catch {
-                Write-Host "ÎŞ·¨ÉèÖÃ $($process.Name) µÄ I/O ÓÅÏÈ¼¶: $($_.Exception.Message)`n¿ÉÄÜĞèÒª¸ü¸ßÈ¨ÏŞ»òµÚÈı·½¹¤¾ß¡£" -ForegroundColor Yellow
+                elseif ($wmicAvailable) {
+                    # å›é€€åˆ° wmic
+                    & wmic process where processid=$($process.Id) call setpriority 1
+                    Write-Host "å·²å°† $($process.Name) çš„ I/O ä¼˜å…ˆçº§è®¾ç½®ä¸ºéå¸¸ä½ (Very Low, via wmic)" -ForegroundColor Green
+                }
+                else {
+                    Write-Host "æ— æ³•è®¾ç½® $($process.Name) çš„ I/O ä¼˜å…ˆçº§ï¼šç³»ç»Ÿä¸æ”¯æŒ wmic ä¸” PowerShell ç‰ˆæœ¬è¿‡ä½`nå»ºè®®å‡çº§ PowerShell æˆ–ä½¿ç”¨ Process Lassoã€‚" -ForegroundColor Yellow
+                }
+            }
+            catch {
+                Write-Host "æ— æ³•è®¾ç½® $($process.Name) çš„ I/O ä¼˜å…ˆçº§: $($_.Exception.Message)`nå¯èƒ½éœ€è¦æ›´é«˜æƒé™æˆ–ç¬¬ä¸‰æ–¹å·¥å…·ã€‚" -ForegroundColor Yellow
             }
 
-            # ½ö¶Ô·Ç°×Ãûµ¥½ø³Ì³¢ÊÔÖÕÖ¹
+            # ä»…å¯¹éç™½åå•è¿›ç¨‹å°è¯•ç»ˆæ­¢
             if ($whitelist -notcontains $name) {
-                Write-Host "`n³¢ÊÔÖÕÖ¹½ø³Ì: $($process.Name), PID: $($process.Id)" -ForegroundColor White
-                # ·½·¨ 1: Stop-Process
+                Write-Host "`nå°è¯•ç»ˆæ­¢è¿›ç¨‹: $($process.Name), PID: $($process.Id)" -ForegroundColor White
+                # æ–¹æ³• 1: Stop-Process
                 try {
                     Stop-Process -Id $process.Id -Force -ErrorAction Stop
-                    Write-Host "ÒÑÍ¨¹ı Stop-Process ³É¹¦ÖÕÖ¹ $($process.Name)" -ForegroundColor Green
+                    Write-Host "å·²é€šè¿‡ Stop-Process æˆåŠŸç»ˆæ­¢ $($process.Name)" -ForegroundColor Green
                     continue
-                } catch {
-                    Write-Host "Stop-Process ÎŞ·¨ÖÕÖ¹ $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+                }
+                catch {
+                    Write-Host "Stop-Process æ— æ³•ç»ˆæ­¢ $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
                 }
 
-                # ·½·¨ 2: taskkill
+                # æ–¹æ³• 2: taskkill
                 try {
                     & taskkill /PID $($process.Id) /F
-                    Write-Host "ÒÑÍ¨¹ı taskkill ³É¹¦ÖÕÖ¹ $($process.Name)" -ForegroundColor Green
+                    Write-Host "å·²é€šè¿‡ taskkill æˆåŠŸç»ˆæ­¢ $($process.Name)" -ForegroundColor Green
                     continue
-                } catch {
-                    Write-Host "taskkill ÎŞ·¨ÖÕÖ¹ $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+                }
+                catch {
+                    Write-Host "taskkill æ— æ³•ç»ˆæ­¢ $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
                 }
 
-                # ·½·¨ 3: wmic
+                # æ–¹æ³• 3: wmic
                 if ($wmicAvailable) {
                     try {
                         & wmic process where processid=$($process.Id) call terminate
-                        Write-Host "ÒÑÍ¨¹ı wmic ³É¹¦ÖÕÖ¹ $($process.Name)" -ForegroundColor Green
+                        Write-Host "å·²é€šè¿‡ wmic æˆåŠŸç»ˆæ­¢ $($process.Name)" -ForegroundColor Green
                         continue
-                    } catch {
-                        Write-Host "wmic ÎŞ·¨ÖÕÖ¹ $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+                    }
+                    catch {
+                        Write-Host "wmic æ— æ³•ç»ˆæ­¢ $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
                     }
                 }
-            } else {
-                Write-Host "½ø³Ì $($process.Name) ÔÚ°×Ãûµ¥ÖĞ£¬½öÏŞÖÆÔËĞĞ£¬²»ÖÕÖ¹" -ForegroundColor Cyan
+            }
+            else {
+                Write-Host "è¿›ç¨‹ $($process.Name) åœ¨ç™½åå•ä¸­ï¼Œä»…é™åˆ¶è¿è¡Œï¼Œä¸ç»ˆæ­¢" -ForegroundColor Cyan
             }
         }
-    } else {
-        Write-Host "`nÎ´ÕÒµ½½ø³Ì: $name" -ForegroundColor Yellow
+    }
+    else {
+        Write-Host "`næœªæ‰¾åˆ°è¿›ç¨‹: $name" -ForegroundColor Yellow
     }
 }
 
-Write-Host "`n=== ÉèÖÃºÍ¹Ø±Õ³¢ÊÔÍê³É ===" -ForegroundColor Green
-Write-Host "`nµ±Ç°°æ±¾ : 1.0.1`n½Å±¾Ã»ÓĞ¸üĞÂÄÜÁ¦£¬½Å±¾ºóĞø»áÓĞĞŞ¸´bugÖ®ÀàµÄ£¬ÈçĞè¸üĞÂ`nÇë·ÃÎÊ : https://ftnknc.lanzouo.com/b0sxutpvc`nÃÜÂë:1eo8" -ForegroundColor Green
+Write-Host "`n=== è®¾ç½®å’Œå…³é—­å°è¯•å®Œæˆ ===" -ForegroundColor Green
+Write-Host "`nå½“å‰ç‰ˆæœ¬ : 1.0.1`nè„šæœ¬æ²¡æœ‰æ›´æ–°èƒ½åŠ›ï¼Œè„šæœ¬åç»­ä¼šæœ‰ä¿®å¤bugä¹‹ç±»çš„ï¼Œå¦‚éœ€æ›´æ–°`nè¯·è®¿é—® : https://ftnknc.lanzouo.com/b0sxutpvc`nå¯†ç :1eo8" -ForegroundColor Green
 
-# Ìí¼ÓÑ¡Ïî²Ëµ¥
+# æ·»åŠ é€‰é¡¹èœå•
 while ($true) {
-    Write-Host "`nÇëÑ¡ÔñÒ»¸öÑ¡Ïî£º" -ForegroundColor Cyan
-    Write-Host "1. ÔËĞĞ '¸ü¸ÄµçÔ´¼Æ»®'"
-    Write-Host "2. ÍË³ö"
+    Write-Host "`nè¯·é€‰æ‹©ä¸€ä¸ªé€‰é¡¹ï¼š" -ForegroundColor Cyan
+    Write-Host "1. è¿è¡Œ 'æ›´æ”¹ç”µæºè®¡åˆ’'"
+    Write-Host "2. é€€å‡º"
 
-    $choice = Read-Host "ÇëÊäÈë1»ò2"
+    $choice = Read-Host "è¯·è¾“å…¥1æˆ–2"
 
     switch ($choice) {
         "1" {
-            # ÔËĞĞ '¸ü¸ÄµçÔ´¼Æ»®.ps1'
-            $powerScriptPath = Join-Path -Path $scriptDir -ChildPath "¸ü¸ÄµçÔ´¼Æ»®.ps1"
+            # è¿è¡Œ 'æ›´æ”¹ç”µæºè®¡åˆ’.ps1'
+            $powerScriptPath = Join-Path -Path $scriptDir -ChildPath "æ›´æ”¹ç”µæºè®¡åˆ’.ps1"
             if (Test-Path -Path $powerScriptPath) {
                 try {
                     Start-Process -FilePath "powershell.exe" -ArgumentList "-File `"$powerScriptPath`"" -ErrorAction Stop
-                    Write-Host "ÒÑÔËĞĞ '¸ü¸ÄµçÔ´¼Æ»®'" -ForegroundColor Green
-                } catch {
-                    Write-Host "ÎŞ·¨ÔËĞĞ '¸ü¸ÄµçÔ´¼Æ»®': $($_.Exception.Message)`nÇëÈ·ÈÏÎÄ¼şÂ·¾¶»òÈ¨ÏŞ¡£" -ForegroundColor Yellow
+                    Write-Host "å·²è¿è¡Œ 'æ›´æ”¹ç”µæºè®¡åˆ’'" -ForegroundColor Green
                 }
-            } else {
-                Write-Host "Î´ÕÒµ½ '¸ü¸ÄµçÔ´¼Æ»®' ÎÄ¼ş: $powerScriptPath`nÇëÈ·ÈÏÎÄ¼şÊÇ·ñ´æÔÚÓÚ½Å±¾Ä¿Â¼ÖĞ¡£" -ForegroundColor Yellow
+                catch {
+                    Write-Host "æ— æ³•è¿è¡Œ 'æ›´æ”¹ç”µæºè®¡åˆ’': $($_.Exception.Message)`nè¯·ç¡®è®¤æ–‡ä»¶è·¯å¾„æˆ–æƒé™ã€‚" -ForegroundColor Yellow
+                }
+            }
+            else {
+                Write-Host "æœªæ‰¾åˆ° 'æ›´æ”¹ç”µæºè®¡åˆ’' æ–‡ä»¶: $powerScriptPath`nè¯·ç¡®è®¤æ–‡ä»¶æ˜¯å¦å­˜åœ¨äºè„šæœ¬ç›®å½•ä¸­ã€‚" -ForegroundColor Yellow
             }
         }
         "2" {
-            # ÍË³ö½Å±¾
-            Write-Host "ÍË³ö½Å±¾" -ForegroundColor Cyan
+            # é€€å‡ºè„šæœ¬
+            Write-Host "é€€å‡ºè„šæœ¬" -ForegroundColor Cyan
             exit
         }
         default {
-            Write-Host "ÎŞĞ§µÄÊäÈë£¬ÇëÊäÈë1»ò2" -ForegroundColor Red
+            Write-Host "æ— æ•ˆçš„è¾“å…¥ï¼Œè¯·è¾“å…¥1æˆ–2" -ForegroundColor Red
         }
     }
 }
