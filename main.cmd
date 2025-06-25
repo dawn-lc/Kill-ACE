@@ -202,15 +202,15 @@ function Stop-ACEProcesses {
     $processNames = @(
         "SGuardSvc64",
         "SGuard64",
-        "ACE-Tray", 
-        "browser", 
+        "ACE-Tray",
+        "browser",
         "delta_force_launcher"
     )
     $whitelist = @(
         "delta_force_launcher",
         "browser",
         "AclosGameProxy",
-        "CrossProxy", 
+        "CrossProxy",
         "无畏契约登录器"
     )
     # 检查 wmic 可用性
@@ -240,7 +240,7 @@ function Stop-ACEProcesses {
                 Write-Host "已将 $($process.Name) 的 CPU 亲和性设置为 CPU $($cpuCount - 1)" -ForegroundColor Green
             }
             catch {
-                Write-Host "无法设置 $($process.Name) 的 CPU 亲和性: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-Host "无法设置 $($process.Name) 的 CPU 亲和性`n$($_.Exception.Message)" -ForegroundColor Yellow
             }
             # 设置进程优先级
             try {
@@ -248,7 +248,7 @@ function Stop-ACEProcesses {
                 Write-Host "已将 $($process.Name) 的优先级设置为低 (Idle)" -ForegroundColor Green
             }
             catch {
-                Write-Host "无法设置 $($process.Name) 的优先级: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-Host "无法设置 $($process.Name) 的优先级`n$($_.Exception.Message)" -ForegroundColor Yellow
             }
             # 设置 I/O 优先级
             try {
@@ -265,7 +265,7 @@ function Stop-ACEProcesses {
                 }
             }
             catch {
-                Write-Host "无法设置 $($process.Name) 的 I/O 优先级: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-Host "无法设置 $($process.Name) 的 I/O 优先级`n$($_.Exception.Message)" -ForegroundColor Yellow
             }
             # 终止非白名单进程
             if ($whitelist -notcontains $name) {
@@ -276,7 +276,7 @@ function Stop-ACEProcesses {
                     continue
                 }
                 catch {
-                    Write-Host "Stop-Process 无法终止 $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+                    Write-Host "Stop-Process 无法终止 $($process.Name)`n$($_.Exception.Message)" -ForegroundColor Yellow
                 }
                 try {
                     & taskkill /PID $($process.Id) /F
@@ -284,7 +284,7 @@ function Stop-ACEProcesses {
                     continue
                 }
                 catch {
-                    Write-Host "taskkill 无法终止 $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+                    Write-Host "taskkill 无法终止 $($process.Name)`n$($_.Exception.Message)" -ForegroundColor Yellow
                 }
                 if ($wmicAvailable) {
                     try {
@@ -293,7 +293,7 @@ function Stop-ACEProcesses {
                         continue
                     }
                     catch {
-                        Write-Host "wmic 无法终止 $($process.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+                        Write-Host "wmic 无法终止 $($process.Name)`n$($_.Exception.Message)" -ForegroundColor Yellow
                     }
                 }
             }
@@ -306,7 +306,15 @@ function Stop-ACEProcesses {
 function Set-ACEServices {
     [CmdletBinding()]
     param()
-    $serviceNames = @("AntiCheatExpert Service", "AntiCheatExpert Protection")
+    $serviceNames = @(
+        "ACE-BASE",
+        "ace-game",
+        "ace-game-0",
+        "TesSafe",
+        "AntiCheatExpert Protection",
+        "AntiCheatExpert Service",
+        "ACE-CORE302706"
+    )
     foreach ($service in $serviceNames) {
         Write-Host "查找服务: $service" -ForegroundColor White
         $svc = Get-Service -DisplayName $service -ErrorAction SilentlyContinue
@@ -317,15 +325,15 @@ function Set-ACEServices {
                     Write-Host "已停止服务: $service" -ForegroundColor Green
                 }
                 catch {
-                    Write-Host "无法停止服务 ${service}: $($_.Exception.Message)" -ForegroundColor Yellow
+                    Write-Host "无法停止服务 ${service}`n$($_.Exception.Message)" -ForegroundColor Yellow
                 }
             }
             try {
-                Set-Service -Name $svc.Name -StartupType Manual -ErrorAction Stop
-                Write-Host "已将服务 ${service} 的启动类型设置为手动" -ForegroundColor Green
+                Set-Service -Name $svc.Name -StartupType Disabled -ErrorAction Stop
+                Write-Host "已将服务 ${service} 的启动类型设置为禁用" -ForegroundColor Green
             }
             catch {
-                Write-Host "无法设置服务 ${service} 的启动类型: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-Host "无法设置服务 ${service} 的启动类型`n$($_.Exception.Message)" -ForegroundColor Yellow
             }
         }
         else {
